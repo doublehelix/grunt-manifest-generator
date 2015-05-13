@@ -1,5 +1,8 @@
+/* jslint globalstrict:true, node:true, devel:true */
+/* globals grunt */
 'use strict';
 
+//module.exports = function(grunt) {
 var Path = require('path');
 var Url = require('url');
 var Http = require('http');
@@ -12,36 +15,45 @@ var File = require('fs');
  * @return {undefined}
  */
 function log(str, type) {
-	switch(type){
-		case 'error':
-			console.error(str);
-			break;
-		case 'warn':
-			console.warn(str);
-			break;
-		case 'info':
-			console.info(str);
-			break;
-		default:
-			console.log(str);
-	}
+    //colors can be: ['white', 'black', 'grey', 'blue', 'cyan', 'green', 'magenta', 'red', 'yellow', 'rainbow'];
+    switch(type){
+        case 'error':
+            //grunt.log.error(str);
+            console.error(str);
+            break;
+        case 'warn':
+            //grunt.log.writeln(str['yellow']);
+            console.warn(str);
+            break;
+        case 'info':
+            //grunt.log.writeln(str['cyan']);
+            console.info(str);
+            break;
+        default:
+            //grunt.log.writeln(str);
+            console.log(str);
+    }
 }
+
+
 /**
  * check the str is or isnot url, such as http:// or //www.baidu.com
  * @param  {String}  str
  * @return {Boolean}
  */
 function isUrl(str) {
-	return /^(\S+:)?\/\//i.test(str.trim());
+    return /^(\S+:)?\/\//i.test(str.trim());
 }
+
 /**
  * check the type of obj is function
  * @param  {Object}  obj
  * @return {Boolean}
  */
 function isFunction(obj){
-	return 'function' === typeof obj;
+    return 'function' === typeof obj;
 }
+
 /**
  * get the file content of url, when the content has been gotten, it will call the function of callback
  * please pay attention that the function is asynchronous
@@ -51,50 +63,51 @@ function isFunction(obj){
  * @return {undefined}
  */
 function getContent(url, callback, errorcall) {
-	var _content = '';
-	//from net
-	if (isUrl(url)) {
-		//下载内容，监听数据成功的事件
-		Http.get(url, function(res) {
-			res.on('data', function(data) {
-				_content += data;
-			})
-				.on('end', function() {
-					if (isFunction(callback)) {
-						callback(_content);
-						return;
-					}
-					log("Got response: " + _content);
-				});
-		}).on('error', function(e) {
-			if (isFunction(errorcall)) {
-				e.url = url;
-				errorcall(e);
-				return;
-			}
-			log("Got error from [" + url + "]:\n" + e.message, 'error');
-		});
-	} else {// read from local disk
-		setTimeout(function() {
-			try {
-				//should clear the query string
-				_content = File.readFileSync(url.replace(/[?#]\S+$/i,'')).toString();
-				if (isFunction(callback)) {
-					callback(_content);
-					return;
-				}
-				log("Got response: " + _content);
-			} catch (e) {
-				if (isFunction(errorcall)) {
-					e.url = url;
-					errorcall(e);
-					return;
-				}
-				log("Got error from [" + url + "]:\n" + e.message, 'error');
-			}
-		}, 0);
-	}
+    var _content = '';
+    //from net
+    if (isUrl(url)) {
+        //下载内容，监听数据成功的事件
+        Http.get(url, function(res) {
+            res.on('data', function(data) {
+                    _content += data;
+                })
+                .on('end', function() {
+                    if (isFunction(callback)) {
+                        callback(_content);
+                        return;
+                    }
+                    log("Got response: " + _content);
+                });
+        }).on('error', function(e) {
+            if (isFunction(errorcall)) {
+                e.url = url;
+                errorcall(e);
+                return;
+            }
+            log("Got error from [" + url + "]:\n" + e.message, 'error');
+        });
+    } else {// read from local disk
+        setTimeout(function() {
+            try {
+                //should clear the query string
+                _content = File.readFileSync(url.replace(/[?#]\S+$/i,'')).toString();
+                if (isFunction(callback)) {
+                    callback(_content);
+                    return;
+                }
+                log("Got response: " + _content);
+            } catch (e) {
+                if (isFunction(errorcall)) {
+                    e.url = url;
+                    errorcall(e);
+                    return;
+                }
+                log("Got error from [" + url + "]:\n" + e.message, 'error');
+            }
+        }, 0);
+    }
 }
+
 /**
  * get the absoulte path of file relativePath, which relatived to targetFilePath
  * @param  {String} targetFilePath
@@ -102,15 +115,16 @@ function getContent(url, callback, errorcall) {
  * @return {String}
  */
 function getAbsolutePath(targetFilePath, relativePath) {
-	relativePath = relativePath.trim();
-	if (isUrl(relativePath)) {
-		return relativePath;
-	}
-	if (isUrl(targetFilePath)) {
-		return Url.resolve(targetFilePath, relativePath);
-	}
-	return Path.normalize(Path.dirname(targetFilePath) + '/' + relativePath);
+    relativePath = relativePath.trim();
+    if (isUrl(relativePath)) {
+        return relativePath;
+    }
+    if (isUrl(targetFilePath)) {
+        return Url.resolve(targetFilePath, relativePath);
+    }
+    return Path.normalize(Path.dirname(targetFilePath) + '/' + relativePath);
 }
+
 /**
  * get the relative path of file sourcePath, which relatived to targetFilePath
  * @param  {[type]} targetFilePath
@@ -118,12 +132,13 @@ function getAbsolutePath(targetFilePath, relativePath) {
  * @return {[type]}
  */
 function getRelativePath(targetFilePath, sourcePath) {
-	sourcePath = sourcePath.trim();
-	if (isUrl(sourcePath)) {
-		return sourcePath;
-	}
-	return Path.relative(Path.dirname(targetFilePath), sourcePath).replace(/\\/g, '/');
+    sourcePath = sourcePath.trim();
+    if (isUrl(sourcePath)) {
+        return sourcePath;
+    }
+    return Path.relative(Path.dirname(targetFilePath), sourcePath).replace(/\\/g, '/');
 }
+
 /**
  * are all  the List items have completed?
  * @param  {Array} checkList
@@ -131,34 +146,37 @@ function getRelativePath(targetFilePath, sourcePath) {
  * @return {Boolean}
  */
 function checkAllDone(checkList, callback){
-	var l;
-    if(checkList.__isDone){
+    var l;
+    if (checkList.__isDone){
       return;
     }
-    if(checkList instanceof Array){
-    	l= checkList.length;
-    	while(l--){
-	      if(!checkList[l].isDone){
-	        return;
-	      }
-	    }
+    if (checkList instanceof Array){
+        l = checkList.length;
+        while (l--){
+          if (!checkList[l].isDone){
+            return;
+          }
+        }
     } else {
-    	for(l in checkList){
-    		if(!checkList[l].isDone){
-    			return;
-    		}
-    	}
+        for (l in checkList){
+            if (!checkList[l].isDone){
+                return;
+            }
+        }
     }
     //has done, may be the array is nevery use
-    checkList.__isDone=true;
+    checkList.__isDone = true;
     callback();
 }
-module.exports= {
-	log: log,
-	isUrl: isUrl,
-	isFunction: isFunction,
-	getContent: getContent,
-	getAbsolutePath: getAbsolutePath,
-	getRelativePath: getRelativePath,
-	checkAllDone: checkAllDone
+
+//};
+
+module.exports = {
+    log: log,
+    isUrl: isUrl,
+    isFunction: isFunction,
+    getContent: getContent,
+    getAbsolutePath: getAbsolutePath,
+    getRelativePath: getRelativePath,
+    checkAllDone: checkAllDone
 };
